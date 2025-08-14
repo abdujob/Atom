@@ -1,24 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:self_service_terminal/screens/wave_webview_page.dart';
-import 'package:url_launcher/url_launcher.dart';
+import '../constants/app_constants.dart';
 import '../models/cart.dart';
-import '../services/wave_service.dart';
 import 'confirmation_screen.dart';
 
 class PaymentScreen extends StatelessWidget {
   const PaymentScreen({super.key});
 
-  void _launchWavePayment(BuildContext context) async {
-    const url = 'https://wave.com/pay'; // Remplace par ton lien réel
-    if (await canLaunch(url)) {
-      await launch(url);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Impossible d'ouvrir le lien Wave")),
-      );
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +25,7 @@ class PaymentScreen extends StatelessWidget {
           children: [
             const SizedBox(height: 12),
             const Text(
-              "S’TACOS",
+              AppConstants.appName,
               style: TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
@@ -70,7 +58,7 @@ class PaymentScreen extends StatelessWidget {
                         ),
                         Text("x${item.quantity}"),
                         const SizedBox(width: 8),
-                        Text("${item.totalPrice.toStringAsFixed(0)} FCFA"),
+                        Text("${item.totalPrice.toStringAsFixed(0)} ${AppConstants.currency}"),
                       ],
                     ),
                   );
@@ -86,14 +74,14 @@ class PaymentScreen extends StatelessWidget {
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                 ),
                 Text(
-                  "${cart.totalPrice.toStringAsFixed(0)} FCFA",
+                  "${cart.totalPrice.toStringAsFixed(0)} ${AppConstants.currency}",
                   style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                 ),
               ],
             ),
             const SizedBox(height: 32),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 // Paiement en espèce
                 GestureDetector(
@@ -114,35 +102,6 @@ class PaymentScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       const Text("EN ESPECE", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-                    ],
-                  ),
-                ),
-                // Paiement via Wave
-                GestureDetector(
-                  onTap: () async {
-                    final cart = Provider.of<Cart>(context, listen: false);
-                    final amount = cart.totalPrice.toInt();
-
-                    final checkoutUrl = await WaveService.createPaymentSession(amount);
-
-                    if (checkoutUrl != null) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => WaveWebViewPage(paymentUrl: checkoutUrl),
-                        ),
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Erreur lors de la création de paiement Wave")),
-                      );
-                    }
-                  },
-                  child: Column(
-                    children: [
-                      Image.asset('assets/images/wave.png', width: 100, height: 100),
-                      const SizedBox(height: 8),
-                      const Text("WAVE", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
                     ],
                   ),
                 ),

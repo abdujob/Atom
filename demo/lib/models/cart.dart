@@ -1,9 +1,20 @@
 import 'package:flutter/foundation.dart';
+import 'package:hive/hive.dart';
 import 'menu_item.dart';
+import 'order.dart';
+import '../services/database_service.dart';
 
-class CartItem {
+part 'cart.g.dart';
+
+@HiveType(typeId: 2)
+class CartItem extends HiveObject {
+  @HiveField(0)
   final MenuItem menuItem;
+  
+  @HiveField(1)
   final List<CustomizationOption> selectedOptions;
+  
+  @HiveField(2)
   int quantity;
 
   CartItem({
@@ -51,5 +62,22 @@ class Cart extends ChangeNotifier {
   void clearCart() {
     _items = [];
     notifyListeners();
+  }
+
+  /// ✅ Sauvegarde la commande dans la base de données
+  Future<String> saveOrder(String paymentMethod) async {
+    if (_items.isEmpty) return '';
+    
+    final orderId = 'order_${DateTime.now().millisecondsSinceEpoch}';
+    final order = Order(
+      id: orderId,
+      items: List.from(_items),
+      totalAmount: totalPrice,
+      createdAt: DateTime.now(),
+      paymentMethod: paymentMethod,
+    );
+    
+    await DatabaseService.saveOrder(order);
+    return orderId;
   }
 }

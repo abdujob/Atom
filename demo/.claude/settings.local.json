@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(del \"C:\\Users\\papan\\StudioProjects\\demo\\lib\\screens\\wave_payment_screen.dart\")",
+      "Bash(rm:*)",
+      "Bash(flutter clean:*)",
+      "Bash(flutter pub deps:*)",
+      "Bash(flutter test:*)",
+      "Bash(flutter packages pub run:*)",
+      "Bash(flutter analyze:*)",
+      "Bash(flutter pub:*)",
+      "Bash(del \"test\\unit\\database_test.dart\")",
+      "Bash(flutter run:*)",
+      "Bash(r)"
+    ],
+    "deny": [],
+    "ask": [],
+    "defaultMode": "acceptEdits"
+  }
+}

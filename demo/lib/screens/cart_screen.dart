@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../constants/app_constants.dart';
 import '../models/cart.dart';
 import 'payment_screen.dart';
 
@@ -38,7 +39,7 @@ class CartScreen extends StatelessWidget {
                         ],
                       ),
                       trailing: Text(
-                        '€${item.totalPrice.toStringAsFixed(2)}',
+                        '${item.totalPrice.toStringAsFixed(0)} ${AppConstants.currency}',
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       leading: IconButton(
@@ -72,7 +73,7 @@ class CartScreen extends StatelessWidget {
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
                           Text(
-                            '€${cart.totalPrice.toStringAsFixed(2)}', // ✅ Correction ici
+                            '${cart.totalPrice.toStringAsFixed(0)} ${AppConstants.currency}',
                             style: Theme.of(context).textTheme.headlineSmall,
                           ),
                         ],

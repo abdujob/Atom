@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../constants/app_constants.dart';
+import '../services/database_service.dart';
 import '../models/menu_item.dart';
 import '../models/cart.dart';
 
@@ -18,11 +20,7 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
   @override
   void initState() {
     super.initState();
-    selectedOptions = [
-      CustomizationOption(name: 'Sauce Algérienne', price: 0, imageUrl: 'assets/images/algerienne.jpg'),
-      CustomizationOption(name: 'Sauce Mayonnaise', price: 0, imageUrl: 'assets/images/mayonnaise.jpg'),
-      CustomizationOption(name: 'Sauce Ketchup', price: 0, imageUrl: 'assets/images/ketchup.jpg'),
-    ];
+    selectedOptions = DatabaseService.getAllCustomizationOptions();
   }
 
   @override
@@ -111,7 +109,7 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
               children: [
                 Expanded(
                   child: Text(
-                    'Total: €${_calculateTotal().toStringAsFixed(2)}',
+                    'Total: ${_calculateTotal().toStringAsFixed(0)} ${AppConstants.currency}',
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                 ),

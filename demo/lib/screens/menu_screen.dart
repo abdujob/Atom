@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
-import '../models/menu_item.dart';
+import '../constants/app_constants.dart';
+import '../data/menu_data.dart';
 import '../widgets/menu_grid.dart';
 import '../widgets/cart_button.dart';
+import '../services/auth_service.dart';
+import 'admin_login_screen.dart';
+import 'admin_dashboard_screen.dart';
 
 class MenuScreen extends StatefulWidget {
   const MenuScreen({super.key});
@@ -11,13 +15,64 @@ class MenuScreen extends StatefulWidget {
 }
 
 class _MenuScreenState extends State<MenuScreen> {
-  String _selectedCategory = 'Tacos';
+  String? _selectedCategory;
+  int _adminTapCount = 0;
+  DateTime? _lastTap;
+  List<Map<String, dynamic>> _categories = [];
 
-  final List<Map<String, dynamic>> _categories = [
-    {'name': 'Tacos', 'icon': 'assets/images/tacos.png'},
-    {'name': 'Burger', 'icon': 'assets/images/burger.png'},
-    {'name': 'Pizza', 'icon': 'assets/images/pizza1.png'},
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadCategories();
+  }
+
+  @override
+  void didUpdateWidget(MenuScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _loadCategories();
+  }
+
+  void _loadCategories() {
+    setState(() {
+      _categories = MenuData.getCategories();
+      if (_categories.isNotEmpty && _selectedCategory == null) {
+        _selectedCategory = _categories.first['name'] as String;
+      } else if (_categories.isNotEmpty && 
+                 _selectedCategory != null && 
+                 !_categories.any((cat) => cat['name'] == _selectedCategory)) {
+        // Si la catégorie sélectionnée n'existe plus, sélectionner la première
+        _selectedCategory = _categories.first['name'] as String;
+      }
+    });
+  }
+
+  void _onLogoTap() {
+    final now = DateTime.now();
+    if (_lastTap != null && now.difference(_lastTap!).inSeconds > 2) {
+      _adminTapCount = 0;
+    }
+    _lastTap = now;
+    _adminTapCount++;
+
+    if (_adminTapCount >= 5) {
+      _adminTapCount = 0;
+      _navigateToAdmin();
+    }
+  }
+
+  void _navigateToAdmin() {
+    if (AuthService.isLoggedIn()) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const AdminDashboardScreen()),
+      ).then((_) => _loadCategories()); // Recharger après retour de l'admin
+    } else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const AdminLoginScreen()),
+      ).then((_) => _loadCategories()); // Recharger après retour de l'admin
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,15 +80,16 @@ class _MenuScreenState extends State<MenuScreen> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
-        title: const Text(
-          "S'TACOS",
-          style: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-            color: Colors.brown,
+        title: GestureDetector(
+          onTap: _onLogoTap,
+          child: const Text(
+            AppConstants.appName,
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: Colors.brown,
+            ),
           ),
-
-
         ),
 
       ),
@@ -41,7 +97,7 @@ class _MenuScreenState extends State<MenuScreen> {
         children: [
           // Left sidebar with categories
           Container(
-            width: 150,
+            width: AppConstants.categorySidebarWidth,
             decoration: BoxDecoration(
               color: Colors.white,
               boxShadow: [
@@ -56,7 +112,18 @@ class _MenuScreenState extends State<MenuScreen> {
             child: Column(
               children: [
                 Expanded(
-                  child: ListView.builder(
+                  child: _categories.isEmpty
+                      ? const Center(
+                          child: Text(
+                            'Aucune catégorie\ndisponible',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: 14,
+                            ),
+                          ),
+                        )
+                      : ListView.builder(
                     itemCount: _categories.length,
                     itemBuilder: (context, index) {
                       final category = _categories[index];
@@ -119,7 +186,15 @@ class _MenuScreenState extends State<MenuScreen> {
 
           // Right side with menu items
           Expanded(
-            child: MenuGrid(category: _selectedCategory),
+            child: _selectedCategory != null
+                ? MenuGrid(category: _selectedCategory!)
+                : const Center(
+                    child: Text(
+                      'Aucune catégorie disponible.\nVeuillez contacter l\'administrateur.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ),
           ),
         ],
       ),

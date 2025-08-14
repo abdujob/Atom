@@ -1,20 +1,20 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:webview_flutter/webview_flutter.dart';
-import 'package:webview_flutter_android/webview_flutter_android.dart'; // ⬅️ Import manquant
 
+import 'constants/app_constants.dart';
 import 'screens/menu_screen.dart';
 import 'models/cart.dart';
+import 'services/database_service.dart';
+import 'services/data_initialization_service.dart';
+import 'services/auth_service.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // ✅ Initialisation WebView pour Android
-  if (defaultTargetPlatform == TargetPlatform.android) {
-    WebViewPlatform.instance = SurfaceAndroidWebView();
-  }
-
+  
+  await DatabaseService.initDatabase();
+  await AuthService.initAuthService();
+  await DataInitializationService.initializeDefaultData();
+  
   runApp(
     ChangeNotifierProvider(
       create: (context) => Cart(),
@@ -29,7 +29,7 @@ class RestaurantApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Restaurant Self-Service',
+      title: AppConstants.appTitle,
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.orange,

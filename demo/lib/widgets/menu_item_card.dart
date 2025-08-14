@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import '../constants/app_constants.dart';
 import '../models/menu_item.dart';
 import '../screens/item_details_screen.dart';
+
 class MenuItemCard extends StatelessWidget {
   final MenuItem menuItem;
 
@@ -12,7 +14,7 @@ class MenuItemCard extends StatelessWidget {
       color: Colors.white, // Définir le fond blanc
       elevation: 4,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppConstants.cardBorderRadius),
       ),
       child: InkWell(
         onTap: () {
@@ -29,17 +31,19 @@ class MenuItemCard extends StatelessWidget {
             Expanded(
               flex: 2,
               child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(AppConstants.cardBorderRadius)),
                 child: Image.asset(
                   menuItem.imageUrl,
                   fit: BoxFit.cover,
+                  cacheWidth: 200, // Optimisation mémoire
+                  cacheHeight: 200,
                 ),
               ),
             ),
             Expanded(
               flex: 1,
               child: Padding(
-                padding: const EdgeInsets.all(8.0),
+                padding: const EdgeInsets.all(AppConstants.smallPadding),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -53,7 +57,7 @@ class MenuItemCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${menuItem.price.toInt()}fr',
+                      '${menuItem.price.toInt()} ${AppConstants.currency}',
                       style: const TextStyle(
                         fontSize: 16,
                         color: Colors.orange,
