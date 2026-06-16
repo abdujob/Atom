@@ -5,50 +5,47 @@ import 'menu_item_card.dart';
 
 class MenuGrid extends StatefulWidget {
   final String category;
+  final String searchQuery;
 
-  const MenuGrid({super.key, required this.category});
+  const MenuGrid({
+    super.key,
+    required this.category,
+    this.searchQuery = '',
+  });
 
   @override
   State<MenuGrid> createState() => _MenuGridState();
 }
 
-class _MenuGridState extends State<MenuGrid> with AutomaticKeepAliveClientMixin {
-  @override
-  bool get wantKeepAlive => false; // Ne pas garder l'état pour forcer le rafraîchissement
-
+class _MenuGridState extends State<MenuGrid> {
   @override
   Widget build(BuildContext context) {
-    super.build(context);
-    final menuItems = DatabaseService.getAllMenuItems();
-    final filteredItems = menuItems.where((item) => item.category == widget.category).toList();
+    var allItems = DatabaseService.getAllMenuItems()
+        .where((item) => item.category == widget.category)
+        .toList();
 
-    if (filteredItems.isEmpty) {
+    // Filtrage par recherche
+    if (widget.searchQuery.isNotEmpty) {
+      final q = widget.searchQuery.toLowerCase();
+      allItems = allItems
+          .where((item) => item.name.toLowerCase().contains(q) ||
+              item.description.toLowerCase().contains(q))
+          .toList();
+    }
+
+    if (allItems.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.restaurant_menu,
-              size: 64,
-              color: Colors.grey[400],
-            ),
+            Icon(Icons.search_off_rounded, size: 64, color: Colors.grey[300]),
             const SizedBox(height: 16),
             Text(
-              'Aucun article dans la catégorie\n"${widget.category}"',
+              widget.searchQuery.isNotEmpty
+                  ? 'Aucun résultat pour "${widget.searchQuery}"'
+                  : 'Aucun article dans "${widget.category}"',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey[600],
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Ajoutez des articles depuis l\'interface admin',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[500],
-              ),
+              style: TextStyle(fontSize: 16, color: Colors.grey[500]),
             ),
           ],
         ),
@@ -63,9 +60,9 @@ class _MenuGridState extends State<MenuGrid> with AutomaticKeepAliveClientMixin 
         crossAxisSpacing: AppConstants.gridSpacing,
         mainAxisSpacing: AppConstants.gridSpacing,
       ),
-      itemCount: filteredItems.length,
+      itemCount: allItems.length,
       itemBuilder: (context, index) {
-        return MenuItemCard(menuItem: filteredItems[index]);
+        return MenuItemCard(menuItem: allItems[index]);
       },
     );
   }

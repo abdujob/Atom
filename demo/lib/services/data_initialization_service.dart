@@ -1,11 +1,42 @@
 import 'database_service.dart';
 import '../models/category.dart';
 import '../models/menu_item.dart';
+import 'api_service.dart';
 
 class DataInitializationService {
   static Future<void> initializeDefaultData() async {
-    // Pas d'initialisation automatique - tout se fait via l'admin
-    // Base de données vidée une fois pour supprimer les anciennes données
+    // 1. Tenter de synchroniser avec le serveur API Laravel
+    try {
+      final apiCategories = await ApiService.getCategories();
+      final apiProducts = await ApiService.getProducts();
+
+      if (apiCategories.isNotEmpty) {
+        await DatabaseService.clearCategories();
+        await DatabaseService.saveCategories(apiCategories);
+        print("Synchronisation des catégories réussie depuis le serveur !");
+      }
+
+      if (apiProducts.isNotEmpty) {
+        await DatabaseService.clearMenuItems();
+        await DatabaseService.saveMenuItems(apiProducts);
+        print("Synchronisation des produits réussie depuis le serveur !");
+      }
+    } catch (e) {
+      print("Échec de la synchronisation avec le serveur API (Mode Hors-ligne) : $e");
+    }
+
+    // 2. Initialisation hors-ligne par défaut si toujours vide (premier démarrage sans serveur)
+    if (DatabaseService.getAllCategories().isEmpty) {
+      await _createDefaultCategories();
+    }
+
+    if (DatabaseService.getAllMenuItems().isEmpty) {
+      await _createDefaultMenuItems();
+    }
+
+    if (DatabaseService.getAllCustomizationOptions().isEmpty) {
+      await _createDefaultCustomizationOptions();
+    }
   }
 
   static Future<void> _createDefaultCategories() async {
@@ -53,7 +84,15 @@ class DataInitializationService {
         name: 'Tacos L',
         description: 'Tacos de taille grande',
         price: 4000,
-        imageUrl: 'assets/images/img.png',
+        imageUrl: 'assets/images/tacos.webp',
+        category: 'Tacos',
+      ),
+      MenuItem(
+        id: 'tacos_xl',
+        name: 'Tacos XL',
+        description: 'Tacos format familial',
+        price: 5500,
+        imageUrl: 'assets/images/img_1.png',
         category: 'Tacos',
       ),
       MenuItem(
@@ -69,7 +108,7 @@ class DataInitializationService {
         name: 'Burger Deluxe',
         description: 'Burger de luxe',
         price: 1500,
-        imageUrl: 'assets/images/img11.webp',
+        imageUrl: 'assets/images/burger.JPG',
         category: 'Burger',
       ),
       MenuItem(
@@ -78,6 +117,14 @@ class DataInitializationService {
         description: 'Burger spécial',
         price: 1200,
         imageUrl: 'assets/images/img12.webp',
+        category: 'Burger',
+      ),
+      MenuItem(
+        id: 'burger_chicken',
+        name: 'Burger Chicken',
+        description: 'Burger au poulet croustillant',
+        price: 1800,
+        imageUrl: 'assets/images/img10.webp',
         category: 'Burger',
       ),
       MenuItem(
@@ -93,7 +140,7 @@ class DataInitializationService {
         name: 'Pizza Pepperoni',
         description: 'Pizza au pepperoni',
         price: 1200,
-        imageUrl: 'assets/images/pizza1.png',
+        imageUrl: 'assets/images/pizza.png',
         category: 'Pizza',
       ),
       MenuItem(
@@ -102,6 +149,14 @@ class DataInitializationService {
         description: 'Pizza aux légumes',
         price: 1100,
         imageUrl: 'assets/images/pizza1.png',
+        category: 'Pizza',
+      ),
+      MenuItem(
+        id: 'pizza_famille',
+        name: 'Pizza Famille',
+        description: 'Grande pizza à partager',
+        price: 2200,
+        imageUrl: 'assets/images/pizza.png',
         category: 'Pizza',
       ),
     ];

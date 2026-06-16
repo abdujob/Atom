@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import 'constants/app_constants.dart';
-import 'screens/menu_screen.dart';
+import 'screens/splash_screen.dart';
 import 'models/cart.dart';
 import 'services/database_service.dart';
 import 'services/data_initialization_service.dart';
@@ -10,11 +11,13 @@ import 'services/auth_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
+  // Mode plein écran (kiosk)
+  await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+
   await DatabaseService.initDatabase();
   await AuthService.initAuthService();
-  await DataInitializationService.initializeDefaultData();
-  
+
   runApp(
     ChangeNotifierProvider(
       create: (context) => Cart(),
@@ -31,11 +34,9 @@ class RestaurantApp extends StatelessWidget {
     return MaterialApp(
       title: AppConstants.appTitle,
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.orange,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
-      home: const MenuScreen(),
+      theme: AppConstants.appTheme,
+      home: const SplashScreen(),
     );
   }
 }
+

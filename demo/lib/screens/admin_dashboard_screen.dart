@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../services/database_service.dart';
 import '../services/database_maintenance_service.dart';
+import '../services/data_initialization_service.dart';
 import 'admin_menu_management_screen.dart';
 import 'admin_customization_management_screen.dart';
 import 'admin_categories_screen.dart';
@@ -24,10 +25,37 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     _loadStats();
   }
 
-  void _loadStats() {
+  Future<void> _loadStats() async {
     setState(() {
       _stats = DatabaseMaintenanceService.getDatabaseStats();
     });
+  }
+
+  Future<void> _syncAndRefresh() async {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Synchronisation avec le serveur...'),
+          duration: Duration(milliseconds: 800),
+          backgroundColor: Colors.blue,
+        ),
+      );
+    }
+    try {
+      await DataInitializationService.initializeDefaultData();
+    } catch (e) {
+      print("Erreur sync: $e");
+    }
+    _loadStats();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Catalogue synchronisé avec succès !'),
+          duration: Duration(seconds: 1),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
   }
 
   Future<void> _logout() async {
@@ -85,8 +113,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: _loadStats,
-            tooltip: 'Actualiser',
+            onPressed: _syncAndRefresh,
+            tooltip: 'Actualiser et Synchroniser',
           ),
           IconButton(
             icon: const Icon(Icons.logout),

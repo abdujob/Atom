@@ -4,6 +4,7 @@ import '../constants/app_constants.dart';
 import '../services/database_service.dart';
 import '../models/menu_item.dart';
 import '../models/cart.dart';
+import '../widgets/smart_image.dart';
 
 class ItemDetailsScreen extends StatefulWidget {
   final MenuItem menuItem;
@@ -36,7 +37,7 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Image.asset(
+                  SmartImage(
                     widget.menuItem.imageUrl,
                     height: 200,
                     fit: BoxFit.cover,

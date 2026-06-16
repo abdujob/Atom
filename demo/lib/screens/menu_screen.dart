@@ -3,7 +3,10 @@ import '../constants/app_constants.dart';
 import '../data/menu_data.dart';
 import '../widgets/menu_grid.dart';
 import '../widgets/cart_button.dart';
+import '../widgets/inactivity_detector.dart';
+import '../widgets/smart_image.dart';
 import '../services/auth_service.dart';
+import '../services/data_initialization_service.dart';
 import 'admin_login_screen.dart';
 import 'admin_dashboard_screen.dart';
 
@@ -24,12 +27,21 @@ class _MenuScreenState extends State<MenuScreen> {
   void initState() {
     super.initState();
     _loadCategories();
+    _syncWithServer();
   }
 
   @override
-  void didUpdateWidget(MenuScreen oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    _loadCategories();
+  void dispose() {
+    super.dispose();
+  }
+
+  Future<void> _syncWithServer() async {
+    try {
+      await DataInitializationService.initializeDefaultData();
+      if (mounted) _loadCategories();
+    } catch (e) {
+      debugPrint("Erreur sync : $e");
+    }
   }
 
   void _loadCategories() {
@@ -37,10 +49,9 @@ class _MenuScreenState extends State<MenuScreen> {
       _categories = MenuData.getCategories();
       if (_categories.isNotEmpty && _selectedCategory == null) {
         _selectedCategory = _categories.first['name'] as String;
-      } else if (_categories.isNotEmpty && 
-                 _selectedCategory != null && 
-                 !_categories.any((cat) => cat['name'] == _selectedCategory)) {
-        // Si la catégorie sélectionnée n'existe plus, sélectionner la première
+      } else if (_categories.isNotEmpty &&
+          _selectedCategory != null &&
+          !_categories.any((c) => c['name'] == _selectedCategory)) {
         _selectedCategory = _categories.first['name'] as String;
       }
     });
@@ -53,7 +64,6 @@ class _MenuScreenState extends State<MenuScreen> {
     }
     _lastTap = now;
     _adminTapCount++;
-
     if (_adminTapCount >= 5) {
       _adminTapCount = 0;
       _navigateToAdmin();
@@ -62,143 +72,193 @@ class _MenuScreenState extends State<MenuScreen> {
 
   void _navigateToAdmin() {
     if (AuthService.isLoggedIn()) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const AdminDashboardScreen()),
-      ).then((_) => _loadCategories()); // Recharger après retour de l'admin
+      Navigator.push(context,
+              MaterialPageRoute(builder: (_) => const AdminDashboardScreen()))
+          .then((_) => _loadCategories());
     } else {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const AdminLoginScreen()),
-      ).then((_) => _loadCategories()); // Recharger après retour de l'admin
+      Navigator.push(context,
+              MaterialPageRoute(builder: (_) => const AdminLoginScreen()))
+          .then((_) => _loadCategories());
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        title: GestureDetector(
-          onTap: _onLogoTap,
-          child: const Text(
-            AppConstants.appName,
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: Colors.brown,
-            ),
-          ),
-        ),
-
-      ),
-      body: Row(
-        children: [
-          // Left sidebar with categories
-          Container(
-            width: AppConstants.categorySidebarWidth,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.2),
-                  spreadRadius: 1,
-                  blurRadius: 7,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                Expanded(
-                  child: _categories.isEmpty
-                      ? const Center(
-                          child: Text(
-                            'Aucune catégorie\ndisponible',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Colors.grey,
-                              fontSize: 14,
+    return InactivityDetector(
+      child: Scaffold(
+        backgroundColor: AppConstants.bgDark,
+        body: Column(
+          children: [
+            _buildHeader(),
+            Expanded(
+              child: Row(
+                children: [
+                  _buildSidebar(),
+                  Expanded(
+                    child: _selectedCategory != null
+                        ? MenuGrid(
+                            category: _selectedCategory!,
+                          )
+                        : const Center(
+                            child: Text(
+                              'Aucune catégorie disponible.',
+                              style: TextStyle(color: AppConstants.textGrey),
                             ),
                           ),
-                        )
-                      : ListView.builder(
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Container(
+      color: AppConstants.bgSidebar,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      child: Row(
+        children: [
+          // Logo — 5 taps = admin
+          GestureDetector(
+            onTap: _onLogoTap,
+            child: Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppConstants.primaryRed,
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppConstants.primaryRed.withOpacity(0.4),
+                    blurRadius: 16,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: const Text(
+                "S'TACOS",
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
+                  letterSpacing: 2,
+                ),
+              ),
+            ),
+          ),
+
+          const Spacer(),
+          const CartButton(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSidebar() {
+    return Container(
+      width: AppConstants.categorySidebarWidth,
+      color: AppConstants.bgSidebar,
+      child: Column(
+        children: [
+          // Titre sidebar
+          Padding(
+            padding: const EdgeInsets.fromLTRB(0, 16, 0, 8),
+            child: Text(
+              "MENU",
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+                color: AppConstants.textMuted,
+                letterSpacing: 3,
+              ),
+            ),
+          ),
+
+          Expanded(
+            child: _categories.isEmpty
+                ? const Center(
+                    child: Text('Aucune\ncatégorie',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            color: AppConstants.textMuted, fontSize: 12)),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
                     itemCount: _categories.length,
-                    itemBuilder: (context, index) {
-                      final category = _categories[index];
+                    itemBuilder: (_, i) {
+                      final cat = _categories[i];
+                      final isSelected = _selectedCategory == cat['name'];
                       return GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _selectedCategory = category['name'];
-                          });
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        onTap: () => setState(() {
+                          _selectedCategory = cat['name'];
+                        }),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 180),
+                          margin: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 3),
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 10, horizontal: 6),
                           decoration: BoxDecoration(
-                            color: _selectedCategory == category['name']
-                                ? Colors.orange.withOpacity(0.1)
+                            color: isSelected
+                                ? AppConstants.primaryRed.withOpacity(0.15)
                                 : Colors.transparent,
-                            border: Border(
-                              left: BorderSide(
-                                color: _selectedCategory == category['name']
-                                    ? Colors.orange
-                                    : Colors.transparent,
-                                width: 5,
-                              ),
-                            ),
+                            borderRadius: BorderRadius.circular(10),
+                            border: isSelected
+                                ? Border.all(
+                                    color: AppConstants.primaryRed.withOpacity(0.5),
+                                    width: 1)
+                                : null,
                           ),
                           child: Column(
                             children: [
-                              Image.asset(
-                                category['icon'],
-                                width: 75,
-                                height: 75,
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                category['name'],
-                                style: TextStyle(
-                                  color: _selectedCategory == category['name']
-                                      ? Colors.orange
-                                      : Colors.black54,
-                                  fontWeight: FontWeight.bold,
+                              SizedBox(
+                                width: 52,
+                                height: 52,
+                                child: SmartImage(
+                                  cat['icon'] ?? '',
+                                  fit: BoxFit.contain,
                                 ),
                               ),
+                              const SizedBox(height: 6),
+                              Text(
+                                cat['name'],
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w800,
+                                  color: isSelected
+                                      ? AppConstants.primaryRed
+                                      : AppConstants.textGrey,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                              if (isSelected)
+                                Container(
+                                  margin: const EdgeInsets.only(top: 4),
+                                  width: 20,
+                                  height: 2,
+                                  decoration: BoxDecoration(
+                                    color: AppConstants.primaryRed,
+                                    borderRadius: BorderRadius.circular(2),
+                                  ),
+                                ),
                             ],
                           ),
                         ),
                       );
                     },
                   ),
-                ),
-                const Divider(
-                  height: 1,
-                  color: Colors.grey,
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  child: const CartButton(),
-                ),
-              ],
-            ),
-          ),
-
-          // Right side with menu items
-          Expanded(
-            child: _selectedCategory != null
-                ? MenuGrid(category: _selectedCategory!)
-                : const Center(
-                    child: Text(
-                      'Aucune catégorie disponible.\nVeuillez contacter l\'administrateur.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 16),
-                    ),
-                  ),
           ),
         ],
       ),
-
     );
   }
+}
+
+void debugPrint(String msg) {
+  // ignore: avoid_print
+  print('[MenuScreen] $msg');
 }
