@@ -24,7 +24,11 @@ class WaveController extends Controller
             ]);
 
         if (!$response->ok()) {
-            return response()->json(['error' => 'Erreur avec Wave'], 500);
+            return response()->json([
+                'error' => 'Erreur avec Wave',
+                'wave_status' => $response->status(),
+                'wave_response' => $response->json() ?? $response->body()
+            ], 500);
         }
 
         $checkoutUrl = $response->json()['wave_launch_url'] ?? null;
