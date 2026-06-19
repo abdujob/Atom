@@ -19,8 +19,8 @@ class WaveController extends Controller
             ->post('https://api.wave.com/v1/checkout/sessions', [
                 'amount'      => intval($amount),
                 'currency'    => 'XOF',
-                'success_url' => env('WAVE_SUCCESS_URL', 'http://127.0.0.1:8000/payment/success'),
-                'error_url'   => env('WAVE_ERROR_URL',   'http://127.0.0.1:8000/payment/error'),
+                'success_url' => env('WAVE_SUCCESS_URL', 'https://wavebackend-smnp.onrender.com/payment/success'),
+                'error_url'   => env('WAVE_ERROR_URL',   'https://wavebackend-smnp.onrender.com/payment/error'),
             ]);
 
         if (!$response->ok()) {
