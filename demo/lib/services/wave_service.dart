@@ -3,8 +3,8 @@ import 'package:http/http.dart' as http;
 
 class WaveService {
   // URL locale et URL de secours (Render)
-  static const String localUrl = "http://127.0.0.1:8000/api";
-  static const String backupUrl = "https://backend-21bk.onrender.com/api";
+  static const String localUrl = "https://wavebackend-smnp.onrender.com/api";
+  static const String backupUrl = "https://wavebackend-smnp.onrender.com/api";
 
   static Future<String?> createPaymentSession(int amount) async {
     // Essai sur le serveur local en premier

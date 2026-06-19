@@ -5,7 +5,7 @@ import '../models/category.dart';
 import '../models/cart.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://127.0.0.1:8000/api';
+  static const String baseUrl = 'https://wavebackend-smnp.onrender.com/api';
 
   // ─── CATÉGORIES ───────────────────────────────────────────
   static Future<List<Category>> getCategories() async {
@@ -42,7 +42,7 @@ class ApiService {
         String imageUrl = 'assets/images/placeholder.png';
         if (item['image_url'] != null) {
           final raw = item['image_url'].toString();
-          imageUrl = raw.startsWith('http') ? raw : 'http://127.0.0.1:8000$raw';
+          imageUrl = raw.startsWith('http') ? raw : 'https://wavebackend-smnp.onrender.com$raw';
         }
         return MenuItem(
           id: item['id'].toString(),
