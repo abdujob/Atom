@@ -14,13 +14,22 @@ class ApiService {
         .timeout(const Duration(seconds: 5));
     if (response.statusCode == 200) {
       final List data = json.decode(response.body);
-      return data.map((item) => Category(
-            id: 'cat_${item['name'].toString().toLowerCase().replaceAll(' ', '_')}',
-            name: item['name'],
-            iconUrl: item['icon'] ?? 'assets/images/placeholder.png',
-            sortOrder: item['id'] as int,
-            isActive: true,
-          )).toList();
+      return data.map((item) {
+        String iconUrl = 'assets/images/placeholder.png';
+        if (item['icon'] != null) {
+          final raw = item['icon'].toString();
+          iconUrl = raw.startsWith('http') || raw.startsWith('assets/')
+              ? raw
+              : 'https://wavebackend-smnp.onrender.com$raw';
+        }
+        return Category(
+          id: 'cat_${item['name'].toString().toLowerCase().replaceAll(' ', '_')}',
+          name: item['name'],
+          iconUrl: iconUrl,
+          sortOrder: item['id'] as int,
+          isActive: true,
+        );
+      }).toList();
     }
     throw Exception('Failed to load categories');
   }

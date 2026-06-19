@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class CategoryController extends Controller
 {
@@ -17,9 +18,14 @@ class CategoryController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'icon' => 'nullable|string',
             'color' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
+
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('categories', 'public');
+            $validated['icon'] = Storage::url($path);
+        }
 
         $category = Category::create($validated);
         return response()->json($category, 201);
@@ -34,9 +40,18 @@ class CategoryController extends Controller
     {
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:255',
-            'icon' => 'nullable|string',
             'color' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
+
+        if ($request->hasFile('image')) {
+            if ($category->icon && str_starts_with($category->icon, '/storage/')) {
+                $oldPath = str_replace('/storage/', '', $category->icon);
+                Storage::disk('public')->delete($oldPath);
+            }
+            $path = $request->file('image')->store('categories', 'public');
+            $validated['icon'] = Storage::url($path);
+        }
 
         $category->update($validated);
         return response()->json($category);
@@ -44,6 +59,10 @@ class CategoryController extends Controller
 
     public function destroy(Category $category)
     {
+        if ($category->icon && str_starts_with($category->icon, '/storage/')) {
+            $oldPath = str_replace('/storage/', '', $category->icon);
+            Storage::disk('public')->delete($oldPath);
+        }
         $category->delete();
         return response()->json(null, 204);
     }

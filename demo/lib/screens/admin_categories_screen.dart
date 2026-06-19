@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/category.dart';
 import '../services/database_service.dart';
+import '../widgets/smart_image.dart';
 
 class AdminCategoriesScreen extends StatefulWidget {
   const AdminCategoriesScreen({super.key});
@@ -188,15 +189,15 @@ class _AdminCategoriesScreenState extends State<AdminCategoriesScreen> {
                       backgroundColor: category.isActive
                           ? Colors.orange.withOpacity(0.1)
                           : Colors.grey.withOpacity(0.1),
-                      child: category.iconUrl.startsWith('assets/')
-                          ? Image.asset(
-                              category.iconUrl,
-                              width: 30,
-                              height: 30,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const Icon(Icons.category),
-                            )
-                          : const Icon(Icons.category),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: SmartImage(
+                          category.iconUrl,
+                          width: 30,
+                          height: 30,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
                     ),
                     title: Text(
                       category.name,
