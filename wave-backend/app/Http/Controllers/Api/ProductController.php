@@ -27,10 +27,10 @@ class ProductController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            $uploadedFile = Cloudinary::upload($request->file('image')->getRealPath(), [
+            $uploadedFile = Cloudinary::uploadApi()->upload($request->file('image')->getRealPath(), [
                 'folder' => 'products'
             ]);
-            $validated['image_url'] = $uploadedFile->getSecurePath();
+            $validated['image_url'] = $uploadedFile['secure_url'];
         }
 
         $product = Product::create($validated);
@@ -59,10 +59,10 @@ class ProductController extends Controller
                 $oldPath = str_replace('/storage/', '', $product->image_url);
                 Storage::disk('public')->delete($oldPath);
             }
-            $uploadedFile = Cloudinary::upload($request->file('image')->getRealPath(), [
+            $uploadedFile = Cloudinary::uploadApi()->upload($request->file('image')->getRealPath(), [
                 'folder' => 'products'
             ]);
-            $validated['image_url'] = $uploadedFile->getSecurePath();
+            $validated['image_url'] = $uploadedFile['secure_url'];
         }
 
         $product->update($validated);

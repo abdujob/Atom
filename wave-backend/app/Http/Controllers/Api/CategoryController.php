@@ -24,10 +24,10 @@ class CategoryController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            $uploadedFile = Cloudinary::upload($request->file('image')->getRealPath(), [
+            $uploadedFile = Cloudinary::uploadApi()->upload($request->file('image')->getRealPath(), [
                 'folder' => 'categories'
             ]);
-            $validated['icon'] = $uploadedFile->getSecurePath();
+            $validated['icon'] = $uploadedFile['secure_url'];
         }
 
         $category = Category::create($validated);
@@ -52,10 +52,10 @@ class CategoryController extends Controller
                 $oldPath = str_replace('/storage/', '', $category->icon);
                 Storage::disk('public')->delete($oldPath);
             }
-            $uploadedFile = Cloudinary::upload($request->file('image')->getRealPath(), [
+            $uploadedFile = Cloudinary::uploadApi()->upload($request->file('image')->getRealPath(), [
                 'folder' => 'categories'
             ]);
-            $validated['icon'] = $uploadedFile->getSecurePath();
+            $validated['icon'] = $uploadedFile['secure_url'];
         }
 
         $category->update($validated);
