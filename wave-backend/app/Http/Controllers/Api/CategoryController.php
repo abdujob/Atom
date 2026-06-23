@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class CategoryController extends Controller
 {
@@ -23,8 +24,10 @@ class CategoryController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('categories', 'public');
-            $validated['icon'] = Storage::url($path);
+            $uploadedFile = Cloudinary::upload($request->file('image')->getRealPath(), [
+                'folder' => 'categories'
+            ]);
+            $validated['icon'] = $uploadedFile->getSecurePath();
         }
 
         $category = Category::create($validated);
@@ -49,8 +52,10 @@ class CategoryController extends Controller
                 $oldPath = str_replace('/storage/', '', $category->icon);
                 Storage::disk('public')->delete($oldPath);
             }
-            $path = $request->file('image')->store('categories', 'public');
-            $validated['icon'] = Storage::url($path);
+            $uploadedFile = Cloudinary::upload($request->file('image')->getRealPath(), [
+                'folder' => 'categories'
+            ]);
+            $validated['icon'] = $uploadedFile->getSecurePath();
         }
 
         $category->update($validated);

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class ProductController extends Controller
 {
@@ -26,8 +27,10 @@ class ProductController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('products', 'public');
-            $validated['image_url'] = Storage::url($path);
+            $uploadedFile = Cloudinary::upload($request->file('image')->getRealPath(), [
+                'folder' => 'products'
+            ]);
+            $validated['image_url'] = $uploadedFile->getSecurePath();
         }
 
         $product = Product::create($validated);
@@ -52,12 +55,14 @@ class ProductController extends Controller
 
         if ($request->hasFile('image')) {
             // Delete old image if exists
-            if ($product->image_url) {
+            if ($product->image_url && str_starts_with($product->image_url, '/storage/')) {
                 $oldPath = str_replace('/storage/', '', $product->image_url);
                 Storage::disk('public')->delete($oldPath);
             }
-            $path = $request->file('image')->store('products', 'public');
-            $validated['image_url'] = Storage::url($path);
+            $uploadedFile = Cloudinary::upload($request->file('image')->getRealPath(), [
+                'folder' => 'products'
+            ]);
+            $validated['image_url'] = $uploadedFile->getSecurePath();
         }
 
         $product->update($validated);
@@ -66,7 +71,7 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
-        if ($product->image_url) {
+        if ($product->image_url && str_starts_with($product->image_url, '/storage/')) {
             $oldPath = str_replace('/storage/', '', $product->image_url);
             Storage::disk('public')->delete($oldPath);
         }
